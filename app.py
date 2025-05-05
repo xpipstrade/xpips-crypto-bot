@@ -16,6 +16,9 @@ def webhook():
     if chat_id and message:
         send_message(chat_id, f"Hello from the bot: {message}")
     return {'status': 'ok'}, 200
+def home():
+    return "Bot XPIPS en ligne !"
+
 
 def send_message(chat_id, text):
     params = {'chat_id': chat_id, 'text': text}
