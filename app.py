@@ -1,32 +1,38 @@
 from flask import Flask, request
-import telegram
-from telegram.ext import Dispatcher, CommandHandler
+from telegram import Bot, Update
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, filters
 
-TOKEN = "7893984645:AAHXUAU0nScgo4MB18zjCWeg6W28Kgvfqdc"  # Remplace par ton vrai token
-bot = telegram.Bot(token=TOKEN)
+TOKEN = '7893984645:AAHXUAU0nScgo4MB18zjCWeg6W28Kgvfqdc'  # Remplace par ton token Telegram réel
 
 app = Flask(__name__)
+bot = Bot(token=TOKEN)
+dispatcher = Dispatcher(bot=bot, update_queue=None, workers=0)
 
-# Commande de base pour tester que le bot fonctionne
+# Commande /start
 def start(update, context):
-    update.message.reply_text("Bienvenue ! Le bot fonctionne ✅")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Bot en ligne ✅")
 
-# Route de base pour tester que l'app est vivante
-@app.route('/')
-def index():
-    return 'Bot Telegram XPips en ligne ✅'
+# Répète les messages texte
+def echo(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Tu as dit : {update.message.text}")
 
-# Route Webhook que Telegram appellera (POST uniquement)
+# Ajoute les handlers
+dispatcher.add_handler(CommandHandler('start', start))
+dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+
+# Route webhook : accepte uniquement POST
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    update = telegram.Update.de_json(request.get_json(force=True), bot)
+    update = Update.de_json(request.get_json(force=True), bot)
     dispatcher.process_update(update)
     return 'ok'
 
-# Initialisation du dispatcher pour gérer les commandes
-dispatcher = Dispatcher(bot, None, workers=0, use_context=True)
-dispatcher.add_handler(CommandHandler('start', start))
+# Route racine pour test GET
+@app.route('/', methods=['GET'])
+def index():
+    return 'Bot Xpips actif !'
 
-# Lancer l'application Flask
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+
