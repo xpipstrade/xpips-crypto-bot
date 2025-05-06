@@ -1,38 +1,56 @@
 from flask import Flask, request
 from telegram import Bot, Update
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, filters
+import logging
 
-TOKEN = '7893984645:AAHXUAU0nScgo4MB18zjCWeg6W28Kgvfqdc'  # Remplace par ton token Telegram réel
+# Active les logs
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+
+from flask import Flask, request
+from telegram import Bot, Update
+from telegram.ext import Dispatcher, CommandHandler, MessageHandler, filters
+import logging
+
+# Active les logs
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+
+TOKEN = "7893984645:AAHXUAU0nScgo4MB18zjCWeg6W28Kgvfqdc"
+bot = Bot(token=TOKEN)
 
 app = Flask(__name__)
-bot = Bot(token=TOKEN)
+
+# Crée le dispatcher
 dispatcher = Dispatcher(bot=bot, update_queue=None, workers=0)
 
 # Commande /start
-def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Bot en ligne ✅")
+def start(update: Update, context):
+    print("Commande /start reçue")
+    update.message.reply_text("Bot en ligne ✅")
 
-# Répète les messages texte
-def echo(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Tu as dit : {update.message.text}")
+# Message texte
+def echo(update: Update, context):
+    print(f"Message reçu : {update.message.text}")
+    update.message.reply_text(f"Tu as dit : {update.message.text}")
 
-# Ajoute les handlers
-dispatcher.add_handler(CommandHandler('start', start))
+# Enregistre les handlers
+dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
-# Route webhook : accepte uniquement POST
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
     dispatcher.process_update(update)
-    return 'ok'
+    return 'OK', 200
 
-# Route racine pour test GET
 @app.route('/', methods=['GET'])
 def index():
-    return 'Bot Xpips actif !'
+    return "Bot actif !", 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
-
